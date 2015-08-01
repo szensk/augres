@@ -1,5 +1,4 @@
 #!/usr/bin/lua
-
 local libPath = "libs.lua"
 local remove  = package.config:sub(0, 1) == "\\" and "del" or "rm"
 local libraries = nil 
@@ -37,10 +36,10 @@ local function parseByteCode(byteCode, debug)
 end
 
 local function resolveGlobals(fileName, debug)
-  local file     = assert(io.open(fileName, "r+"), "Unable to open file: " .. fileName)
-  local source   = file:read("*all")
-  local byteCode = collectByteCode(fileName)
-  local globals = parseByteCode(byteCode, debug)
+  local file      = assert(io.open(fileName, "r+"), "Unable to open file: " .. fileName)
+  local source    = file:read("*all")
+  local byteCode  = collectByteCode(fileName)
+  local globals   = parseByteCode(byteCode, debug)
   local outsource = {}
   libraries = libraries or loadLibPaths(libPath)
   for i, global in pairs(globals) do
@@ -68,7 +67,7 @@ local function resolveGlobals(fileName, debug)
   return 0
 end
 
-local files   = {}
+local files = {}
 for i=1, #arg do
   files[#files + 1] = arg[i]
 end
@@ -83,7 +82,6 @@ local function doFiles()
   return filesWritten
 end
 
---clean up .augres
 local status, err = pcall(doFiles) 
 if status then
   print("Success. Wrote " .. err .. " file(s).")
