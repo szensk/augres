@@ -53,10 +53,10 @@ local function resolveGlobals(fileName, debug)
       end
     end
   end
-  if #outsource > 0 then
-    outsource[#outsource + 1] = '' --add a spacer
+  if #outsource > 0 then --only rewrite the file if we have anything to add
+    outsource[#outsource + 1] = '' -- add a gap to separate the original source
     outsource[#outsource + 1] = source
-    outsource = table.concat(outsource, '\n') --add the localized includes
+    outsource = table.concat(outsource, '\n') 
     if debug then 
       print(outsource)
     else 
