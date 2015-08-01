@@ -29,7 +29,7 @@ local function parseByteCode(byteCode, debug)
     local name = string.match(line, ".*GETGLOBAL.*; ([%a_][%w_]*)")
     if name then 
       if debug then print("Global found: ", name) end
-      globals[#globals + 1] = name
+      globals[name] = name
     end
   end
   return globals
@@ -42,7 +42,7 @@ local function resolveGlobals(fileName, debug)
   local globals   = parseByteCode(byteCode, debug)
   local outsource = {}
   libraries = libraries or loadLibPaths(libPath)
-  for i, global in pairs(globals) do
+  for _, global in pairs(globals) do
     local libEntry = libraries[global]
     if libEntry then
       if type(libEntry) == "string" then
