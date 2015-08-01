@@ -4,17 +4,19 @@ local libPath = "libs.lua"
 local remove  = package.config:sub(0, 1) == "\\" and "del" or "rm"
 local libraries = nil 
 local tmpname   = ".augres" --os.tmpname() is no go without admin on windows
+local plscleanup   = false
 
 local function loadLibPaths(location)
   location = location or libPath
-  local source = "return " .. io.open(location, "r"):read("*all")
+  local libEntries = assert(io.open(location, "r"), "Unable to find libs.lua")
+  local source = "return " ..libEntries:read("*all")
   local fn = assert(loadstring(source))
   return fn()
 end
 
 local function collectByteCode(fileName)
-  os.execute("luac -p -l " .. fileName .. " > " .. tmpname)
-  local tmpfile = io.open(tmpname, "r")
+  plscleanup = os.execute("luac -p -l " .. fileName .. " > " .. tmpname)
+  local tmpfile = assert(io.open(tmpname, "r"), "Unable to open temporary file.")
   local result = {} 
   for l in tmpfile:lines() do result[#result + 1] = l end
   tmpfile:close()
@@ -35,7 +37,7 @@ local function parseByteCode(byteCode, debug)
 end
 
 local function resolveGlobals(fileName, debug)
-  local file     = io.open(fileName, "r+")
+  local file     = assert(io.open(fileName, "r+"), "Unable to open file: " .. fileName)
   local source   = file:read("*all")
   local byteCode = collectByteCode(fileName)
   local globals = parseByteCode(byteCode, debug)
@@ -53,28 +55,40 @@ local function resolveGlobals(fileName, debug)
   end
   if #outsource > 0 then
     outsource[#outsource + 1] = '' --add a spacer
+    outsource[#outsource + 1] = source
+    outsource = table.concat(outsource, '\n') --add the localized includes
+    if debug then 
+      print(outsource)
+    else 
+      file:seek("set")
+      file:write(outsource)
+    end
+    return 1
   end
-  outsource[#outsource + 1] = source
-  outsource = table.concat(outsource, '\n') --add the localized includes
-  file:seek("set")
-  if debug then 
-    print(outsource)
-  else 
-    file:write(outsource)
-  end
+  return 0
 end
-
 
 local files   = {}
 for i=1, #arg do
   files[#files + 1] = arg[i]
 end
 
-for i, file in ipairs(files) do 
-  if file ~= libPath then
-    resolveGlobals(file, false)
+local function doFiles()
+  local filesWritten = 0
+  for i, file in ipairs(files) do 
+    if file ~= libPath then
+      filesWritten = filesWritten + resolveGlobals(file)
+    end
   end
+  return filesWritten
 end
 
 --clean up .augres
-os.execute(remove .. " " .. tmpname)
+local status, err = pcall(doFiles) 
+if status then
+  print("Success. Wrote " .. err .. " file(s).")
+else
+  print("Error, aborting...")
+  print(err)
+end 
+if plscleanup then os.execute(remove .. " " .. tmpname) end
