@@ -15,14 +15,15 @@ end
 
 local function loadLibPaths(location)
   location = location or libPath
-  local libEntries = assert(io.open(location, "r"), "Unable to find libs.lua")
+  local libEntries = assert(io.open(location, "r"), "Unable to find " .. libPath)
   local source = "return " ..libEntries:read("*all")
   local fn = assert(loadstring(source))
   return fn()
 end
 
 local function collectByteCode(fileName)
-  plscleanup = os.execute("luac -p -l " .. fileName .. " > " .. tmpname)
+  plscleanup = true 
+  os.execute("luac -p -l " .. fileName .. " > " .. tmpname)
   local tmpfile = assert(io.open(tmpname, "r"), "Unable to open temporary file.")
   local result = {} 
   for l in tmpfile:lines() do result[#result + 1] = l end
@@ -85,6 +86,7 @@ if arg[1] == "-l" then
   libPath = arg[2]
 elseif arg[1] == "-h" then
   showHelp()
+  os.exit(1)
 end
 for i=start, #arg do
   files[#files + 1] = arg[i]
@@ -94,6 +96,7 @@ local function doFiles()
   local filesWritten = 0
   for i, file in ipairs(files) do 
     if file ~= libPath then
+      print(file, libPath)
       filesWritten = filesWritten + resolveGlobals(file)
     end
   end
@@ -104,7 +107,8 @@ local status, err = pcall(doFiles)
 if status then
   print("Success. Wrote " .. err .. " file(s).")
 else
-  print("Error, aborting...")
-  print(err)
+  print("Error:")
+  print('\t'..err)
 end 
 if plscleanup then os.execute(remove .. " " .. tmpname) end
+os.exit(status and 0 or 1)
