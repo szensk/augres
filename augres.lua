@@ -21,13 +21,21 @@ local function loadLibPaths(location)
   return fn()
 end
 
-local function collectByteCode(fileName)
+--[[local function collectByteCode(fileName)
   plscleanup = true 
   os.execute("luac -p -l " .. fileName .. " > " .. tmpname)
   local tmpfile = assert(io.open(tmpname, "r"), "Unable to open temporary file.")
   local result = {} 
   for l in tmpfile:lines() do result[#result + 1] = l end
   tmpfile:close()
+  return result
+end]]
+
+local function collectByteCode(fileName)
+  local f = io.popen("luac -p -l " .. fileName)
+  --local output = f:read("*all")
+  local result = {}
+  for l in f:lines() do result[#result + 1] = l end
   return result
 end
 
