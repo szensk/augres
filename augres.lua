@@ -78,15 +78,14 @@ local function resolveGlobals(fileName, debug)
   return 0
 end
 
--- todo: verify
 local start = 1
 local files = {}
 if arg[1] == "-l" then
-  start = 3
-  libPath = arg[2]
+  start = 3 --start at 3rd argument as 1 is -l and 2 is the library dictionary
+  libPath = arg[2] 
 elseif arg[1] == "-h" then
   showHelp()
-  os.exit(1)
+  os.exit(0)
 end
 for i=start, #arg do
   files[#files + 1] = arg[i]
