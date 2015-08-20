@@ -1,9 +1,6 @@
 #!/usr/bin/lua
 local libPath = "libs.lua"
-local remove  = package.config:sub(0, 1) == "\\" and "del" or "rm"
 local libraries  = nil 
-local tmpname    = ".augres" --os.tmpname() is no go without admin on windows
-local plscleanup = false
 local version    = "0.0.1"
 
 local function showHelp()
@@ -21,19 +18,8 @@ local function loadLibPaths(location)
   return fn()
 end
 
---[[local function collectByteCode(fileName)
-  plscleanup = true 
-  os.execute("luac -p -l " .. fileName .. " > " .. tmpname)
-  local tmpfile = assert(io.open(tmpname, "r"), "Unable to open temporary file.")
-  local result = {} 
-  for l in tmpfile:lines() do result[#result + 1] = l end
-  tmpfile:close()
-  return result
-end]]
-
 local function collectByteCode(fileName)
   local f = io.popen("luac -p -l " .. fileName)
-  --local output = f:read("*all")
   local result = {}
   for l in f:lines() do result[#result + 1] = l end
   return result
@@ -117,5 +103,4 @@ else
   print("Error:")
   print('\t'..err)
 end 
-if plscleanup then os.execute(remove .. " " .. tmpname) end
 os.exit(status and 0 or 1)
