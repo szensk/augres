@@ -1,9 +1,17 @@
 #!/usr/bin/lua
 local libPath = "libs.lua"
 local remove  = package.config:sub(0, 1) == "\\" and "del" or "rm"
-local libraries = nil 
-local tmpname   = ".augres" --os.tmpname() is no go without admin on windows
-local plscleanup   = false
+local libraries  = nil 
+local tmpname    = ".augres" --os.tmpname() is no go without admin on windows
+local plscleanup = false
+local version    = "0.0.1"
+
+local function showHelp()
+  print("Augres (" .. version .. ") Help:")
+  print("usage: augres luaFile1 luaFile2")
+  print("\t-l location  set the path for the library dictionary.")
+  print("\t-h           show this help.")
+end
 
 local function loadLibPaths(location)
   location = location or libPath
@@ -47,8 +55,10 @@ local function resolveGlobals(fileName, debug)
     if libEntry then
       if type(libEntry) == "string" then
         outsource[#outsource + 1] = "local " .. global .. " = require('" .. libraries[global] .. "')"
-      else
+      elseif type(libEntry) == "table" then
         error("Child tables not yet implemented.")
+      else
+        error("This will never be implemented.")
       end
     end
   end
@@ -67,8 +77,16 @@ local function resolveGlobals(fileName, debug)
   return 0
 end
 
+-- todo: verify
+local start = 1
 local files = {}
-for i=1, #arg do
+if arg[1] == "-l" then
+  start = 3
+  libPath = arg[2]
+elseif arg[1] == "-h" then
+  showHelp()
+end
+for i=start, #arg do
   files[#files + 1] = arg[i]
 end
 
